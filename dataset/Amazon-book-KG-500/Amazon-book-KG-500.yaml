@@ -1,0 +1,24 @@
+# Amazon-book-KG-500 Configuration for RecBole
+field_separator: "\t"
+seq_separator: " "
+USER_ID_FIELD: user_id
+ITEM_ID_FIELD: item_id
+TIME_FIELD: timestamp
+RATING_FIELD: rating
+HEAD_ENTITY_ID_FIELD: head_id
+TAIL_ENTITY_ID_FIELD: tail_id
+RELATION_ID_FIELD: relation_id
+ITEM_ENTITY_ID_FIELD: item_id
+COLUMNS:
+  inter:
+    - user_id:token
+    - item_id:token
+    - rating:float
+    - timestamp:float
+  kg:
+    - head_id:token
+    - relation_id:token
+    - tail_id:token
+  link:
+    - item_id:token
+    - entity_id:token

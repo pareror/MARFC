@@ -1,6 +1,13 @@
-# A Model-Agnostic Re-ranking Framework for Creativity-Oriented Recommendations
+# 🎨 A Model-Agnostic Re-ranking Framework for Creativity-Oriented Recommendations
 
-## Overview
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+[![RecBole](https://img.shields.io/badge/RecBole-Framework-brightgreen.svg)](https://github.com/RUCAIBox/RecBole)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## 📚 Overview
 Modern Recommender Systems (RecSys) have achieved excellent accuracy in predicting user preferences. However, exclusively optimizing for accuracy—the *accuracy-only* paradigm—generates undesirable side effects, most notably the Filter Bubble. This phenomenon confines users within a "comfort zone" of predictable and redundant suggestions. Over time, this lack of novelty compromises long-term user satisfaction and retention.
 
 This project aims to overcome these limitations by integrating principles of Computational Creativity (referencing Margaret Boden's theoretical framework) into the recommendation pipeline. The goal is to engineer *Serendipity*, balancing the relevance of suggestions with Novelty and Unexpectedness to offer recommendations that are not only useful but also original and surprising.
@@ -9,11 +16,11 @@ From a methodological standpoint, the codebase focuses on a specific re-ranking 
 
 Experimental validation is built on top of the RecBole framework. The repository contains scripts to test collaborative filtering models and knowledge-aware architectures. Results show that while there is an inevitable trade-off between accuracy and creativity, the proposed strategy significantly boosts the novelty and unexpectedness of recommendations, mitigating the filter bubble without drastically degrading perceived system quality.
 
-## Installation & Setup
+## 🚀 Installation & Setup
 
-To run the codebase, it is highly recommended to use an isolated Python virtual environment. 
+> ⚠️ **Important**: Python 3.8+ and a CUDA-capable GPU are required for optimal performance.
 
-Open the terminal:
+To run the codebase, it is highly recommended to use an isolated Python virtual environment.
 
 ### Windows Setup
 
@@ -41,50 +48,68 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Metrics and Evaluation
+## 📊 Metrics and Evaluation
+
+> 🔬 **Custom Creativity Framework**: Beyond traditional accuracy metrics, this project implements a suite of specialized metrics to quantify the creative and serendipitous potential of recommendations.
 
 In addition to standard accuracy metrics provided by the RecBole backend, the framework implements several custom metrics tailored specifically to measure the *creative* potential of the recommendations. 
 
 ### Custom Creativity Metrics
 
-**1. Item Novelty**
+**1. Item Novelty** 🆕
 A score inversely proportional to the item's occurrences within the training set. It rewards the system for surfacing long-tail items.
-$$ \text{Novelty}(i) = \frac{1}{\log(1 + avgpop(i))} $$
-*(where $avgpop(i)$ is the popularity count of item $i$)*
+```math
+\text{Novelty}(i) = \frac{1}{\log(1 + avgpop(i))}
+```
+*(where `avgpop(i)` is the popularity count of item `i`)*
 
-**2. Item Unexpectedness**
-Measures how semantically different a candidate item is relative to the user's historical profile ($H_u$). It uses the average cosine similarity between the candidate's embedding and the embeddings of the items the user previously interacted with. The similarity is normalized from $[-1, 1]$ to $[0, 1]$ before being inverted, so that highly dissimilar items approach an unexpectedness of $1$.
-$$ \text{sim}_{norm}(i, H_u) = \frac{\overline{\text{cosine\_sim}}(i, H_u) + 1}{2} $$
-$$ \text{Unexpectedness}(i, u) = 1 - \text{sim}_{norm}(i, H_u) $$
+**2. Item Unexpectedness** ⚡
+Measures how semantically different a candidate item is relative to the user's historical profile. It uses the average cosine similarity between the candidate's embedding and the embeddings of the items the user previously interacted with. The similarity is normalized from `[-1, 1]` to `[0, 1]` before being inverted.
+```math
+\text{sim}_{norm}(i, H_u) = \frac{\overline{\text{cosine\_sim}}(i, H_u) + 1}{2}
+```
+```math
+\text{Unexpectedness}(i, u) = 1 - \text{sim}_{norm}(i, H_u)
+```
 
-**3. Creativity Score (Re-ranking Objective)**
-The composite aggregated metric used during the re-ranking phase. It combines min-max normalized relevance (from base predictions), novelty, and unexpectedness through customizable weights ($w_{rel}$, $w_{nov}$, $w_{unexp}$).
-$$ \text{Creativity Score} = w_{rel} \cdot \widehat{\text{Rel}} + w_{nov} \cdot \widehat{\text{Nov}} + w_{unexp} \cdot \widehat{\text{Unexp}} $$
+**3. Creativity Score (Re-ranking Objective)** 🎯
+The composite aggregated metric used during the re-ranking phase. It combines min-max normalized relevance (from base predictions), novelty, and unexpectedness through customizable weights (`w_rel`, `w_nov`, `w_unexp`).
+```math
+\text{Creativity Score} = w_{rel} \cdot \widehat{\text{Rel}} + w_{nov} \cdot \widehat{\text{Nov}} + w_{unexp} \cdot \widehat{\text{Unexp}}
+```
 
-**4. Serendipity (Gérard-Evangelista)**
-A binary serendipity representation counting serendipitous hits: recommendations that are successfully relevant (found in ground truth $T_u$) AND strictly unpopular (not belonging to the set of the most popular items $PM_K$). Averaged over users:
-$$ \text{Serendipity}_{GE}(u) = \frac{\left|\{ i \in L_u \cap T_u \mid i \notin PM_K \}\right|}{K} $$
+**4. Serendipity (Gérard-Evangelista)** ✨
+A binary serendipity representation counting serendipitous hits: recommendations that are successfully relevant (found in ground truth `T_u`) AND strictly unpopular (not belonging to the set of the most popular items `PM_K`). Averaged over users:
+```math
+\text{Serendipity}_{GE}(u) = \frac{\left|\{ i \in L_u \cap T_u \mid i \notin PM_K \}\right|}{K}
+```
 
-**5. Serendipity & Unexpectedness (Yan et al.)**
+**5. Serendipity & Unexpectedness (Yan et al.)** 🌟
 Evaluates surprise based purely on user-to-item spatial distance (dot product of normal embeddings). 
-$$ \text{Unexp}_{Yan}(i, u) = 1 - \frac{\text{sim}(\vec{u}, \vec{i}) + 1}{2} $$
+```math
+\text{Unexp}_{Yan}(i, u) = 1 - \frac{\text{sim}(\vec{u}, \vec{i}) + 1}{2}
+```
 The serendipity score averages this unexpectedness strictly over overlapping hits:
-$$ \text{Serendipity}_{Yan}(u) = \frac{1}{K} \sum_{i \in L_u \cap T_u} \text{Unexp}_{Yan}(i, u) $$
+```math
+\text{Serendipity}_{Yan}(u) = \frac{1}{K} \sum_{i \in L_u \cap T_u} \text{Unexp}_{Yan}(i, u)
+```
 
-### Standard Base Metrics (RecBole)
+### Standard Base Metrics (RecBole) 🎲
 - **NDCG (Normalized Discounted Cumulative Gain):** Measures ranking quality, heavily penalizing relevant items placed lower in the list.
 - **Recall & Precision:** Standard retrieval accuracy metrics evaluating hits against the user's hidden items.
 - **AveragePopularity:** Evaluates the aggregate popularity of the recommended lists. Lower values typically denote better novelty.
 - **GiniIndex & ShannonEntropy:** General measurements of diversity and distribution equality across the catalog. Evaluates whether the model recommends a diverse set of items across the whole user base rather than exploiting a specific niche.
 
-The project uses two primary datasets, both included in the repository.
+## 📂 Datasets
+
+The project uses two primary datasets, both included in the repository (tracked via Git LFS).
 
 | Dataset | Users | Items | Interactions | Notes |
 |---------|-------|-------|--------------|-------|
 | **MovieLens-1M** | 6,040 | 3,952 | 1,000,210 | Explicit ratings (1–5) |
 | **Amazon-Books (Reduced)** | 1,760 | 78,142 | 887,367 | Filtered for users with ≥500 interactions (original dataset had ~51.3 million interactions) |
 
-## Models and Hyperparameters
+## 🧠 Models and Hyperparameters
 
 The repository contains scripts that configure and train a variety of baselines and state-of-the-art architectures using the RecBole backend. Below is a summary of the primary models used and their key hyperparameter configurations. 
 
@@ -114,11 +139,11 @@ All models share a set of common training parameters unless specified otherwise:
 
 *Note: These hyperparameter sets are defined explicitly inside the `MODELS` dictionary inside `train_and_save_recs.py` and `train_and_save_recs_KG.py`. They can be freely modified prior to execution to experiment with performance variability.*
 
-## File Descriptions and Usage Guide
+## 📝 File Descriptions and Usage Guide
 
 This section details every script within the repository, its core purpose, how to execute it, and the configurable parameters (hyperparameters) commonly found at the top of the files.
 
-### 1. Data Preprocessing Scripts
+### 1. 🔧 Data Preprocessing Scripts
 These utility scripts are primarily used to analyze and reduce massive datasets (like Amazon-Books) to create denser, more manageable sub-datasets for training.
 
 - **`analyze_amazon_thresholds.py`**
@@ -131,7 +156,7 @@ These utility scripts are primarily used to analyze and reduce massive datasets 
   - **Execution**: `python create_amazon_cut.py`
   - **Modifiable Parameters**: You can adjust `USER_THRESHOLD` (e.g., set to 500 to strictly keep users with $\ge 500$ ratings) and `ITEM_THRESHOLD` directly inside the code to enforce the limits.
 
-### 2. Training Scripts
+### 2. 🏋️ Training Scripts
 These scripts initialize, train, and test validating baselines, automatically saving their states continuously.
 
 - **`train_and_save_recs.py` & `train_and_save_recs_KG.py`**
@@ -143,7 +168,7 @@ These scripts initialize, train, and test validating baselines, automatically sa
     - `SEED`: Random initialization seed (default: `2020`).
     - `GLOBAL_CONFIG`: Controls base architectural behaviors (batch sizes, early stopping step, evaluation split `80_10_10`). *Note: It is highly recommended to leave `GLOBAL_CONFIG` and `SEED` entirely unchanged if the goal is to perfectly replicate the experimental results of the thesis.*
 
-### 3. Evaluation & Re-ranking Scripts
+### 3. 📈 Evaluation & Re-ranking Scripts
 These scripts load the pre-trained models, extract the recommended candidates, and mathematically re-rank them to break the accuracy-only paradigm using the Creativity Score metrics. 
 
 - **`eval_creativity_score_reranking.py`** (and specific variants `eval_creativity_enmf.py`, `eval_creativity_lightgcn.py`)

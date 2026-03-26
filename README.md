@@ -8,13 +8,7 @@
 ---
 
 ## 📚 Overview
-Modern Recommender Systems (RecSys) have achieved excellent accuracy in predicting user preferences. However, exclusively optimizing for accuracy—the *accuracy-only* paradigm—generates undesirable side effects, most notably the Filter Bubble. This phenomenon confines users within a "comfort zone" of predictable and redundant suggestions. Over time, this lack of novelty compromises long-term user satisfaction and retention.
-
-This project aims to overcome these limitations by integrating principles of Computational Creativity (referencing Margaret Boden's theoretical framework) into the recommendation pipeline. The goal is to engineer *Serendipity*, balancing the relevance of suggestions with Novelty and Unexpectedness to offer recommendations that are not only useful but also original and surprising.
-
-From a methodological standpoint, the codebase focuses on a specific re-ranking strategy applied downstream of standard retrieval models: the **Creativity Score Re-ranking**. This composite metric linearly aggregates relevance, novelty (based on inverse popularity), and unexpectedness (based on semantic distance), allowing for direct optimization of the creative potential of the recommendations. 
-
-Experimental validation is built on top of the RecBole framework. The repository contains scripts to test collaborative filtering models and knowledge-aware architectures. Results show that while there is an inevitable trade-off between accuracy and creativity, the proposed strategy significantly boosts the novelty and unexpectedness of recommendations, mitigating the filter bubble without drastically degrading perceived system quality.
+Modern recommender systems are effective at optimizing accuracy, but this can sometimes lead to obvious recommendations and limit opportunities for user exploration. To tackle this issue, it is common to design recommendation strategies that prioritize beyond-accuracy metrics, such as novelty and diversity, to provide users with more surprising suggestions. In this paper, we propose a model-agnostic, lightweight re-ranking approach grounded on computational creativity theories that aim to provide users with recommendations that combine relevance, novelty, and unexpectedness. The method is applied after the recommendation step and can be integrated with existing models without modifying their training process. We evaluate our approach on benchmark datasets and recommendation algorithms, using the RecBole framework. Overall, our findings suggest our creativity-aware re-ranking can improve the quality of the recommendations in terms of trade-off between accuracy and beyond-accuracy metrics
 
 ## 🚀 Installation & Setup
 
@@ -50,7 +44,7 @@ pip install -r requirements.txt
 
 ## 📊 Metrics and Evaluation
 
-> 🔬 **Custom Creativity Framework**: Beyond traditional accuracy metrics, this project implements a suite of specialized metrics to quantify the creative and serendipitous potential of recommendations.
+> 🔬 **Custom Creativity Framework**: Beyond traditional accuracy metrics, this project implements a suite of specialized metrics to quantify the creative potential of recommendations.
 
 In addition to standard accuracy metrics provided by the RecBole backend, the framework implements several custom metrics tailored specifically to measure the *creative* potential of the recommendations. 
 
@@ -76,22 +70,6 @@ Measures how semantically different a candidate item is relative to the user's h
 The composite aggregated metric used during the re-ranking phase. It combines min-max normalized relevance (from base predictions), novelty, and unexpectedness through customizable weights (`w_rel`, `w_nov`, `w_unexp`).
 ```math
 \text{Creativity Score} = w_{rel} \cdot \widehat{\text{Rel}} + w_{nov} \cdot \widehat{\text{Nov}} + w_{unexp} \cdot \widehat{\text{Unexp}}
-```
-
-**4. Serendipity (Gérard-Evangelista)** ✨
-A binary serendipity representation counting serendipitous hits: recommendations that are successfully relevant (found in ground truth `T_u`) AND strictly unpopular (not belonging to the set of the most popular items `PM_K`). Averaged over users:
-```math
-\text{Serendipity}_{GE}(u) = \frac{\left|\{ i \in L_u \cap T_u \mid i \notin PM_K \}\right|}{K}
-```
-
-**5. Serendipity & Unexpectedness (Yan et al.)** 🌟
-Evaluates surprise based purely on user-to-item spatial distance (dot product of normal embeddings). 
-```math
-\text{Unexp}_{Yan}(i, u) = 1 - \frac{\text{sim}(\vec{u}, \vec{i}) + 1}{2}
-```
-The serendipity score averages this unexpectedness strictly over overlapping hits:
-```math
-\text{Serendipity}_{Yan}(u) = \frac{1}{K} \sum_{i \in L_u \cap T_u} \text{Unexp}_{Yan}(i, u)
 ```
 
 ### Standard Base Metrics (RecBole) 🎲
@@ -125,11 +103,8 @@ All models share a set of common training parameters unless specified otherwise:
 
 | Model | Hyperparameters | Description |
 |-------|----------------|-------------|
-| **Pop** | `epochs`: 1 | Simple popularity baseline. Requires no iteration. |
-| **ItemKNN** | `epochs`: 10, `k`: 64 | K-Nearest Neighbors item-based baseline. `k` indicates the neighborhood size. |
 | **BPR** | `epochs`: 10, `learning_rate`: 0.001, `embedding_size`: 64 | Bayesian Personalized Ranking. Standard collaborative filtering via matrix factorization. |
 | **DMF** | `epochs`: 20, `learning_rate`: 0.001, `user_embedding_size`: 64, `item_embedding_size`: 64, `user_hidden_size_list`: [64, 64], `item_hidden_size_list`: [64, 64] | Deep Matrix Factorization. Employs multi-layer perceptrons (MLPs) over embeddings. |
-| **MultiVAE** | `epochs`: 15, `learning_rate`: 0.001, `hidden_dimension`: [600, 200], `latent_dimension`: 200, `dropout_prob`: 0.5 | Variational Autoencoder for collaborative filtering. Uses a non-linear generative approach. |
 | **LightGCN** | `epochs`: 20, `learning_rate`: 0.001, `embedding_size`: 64, `n_layers`: 2, `reg_weight`: 1e-4 | Lightweight Graph Convolutional Network. Employs a simplified GCN architecture focusing purely on neighborhood aggregation. |
 | **ENMF** | `epochs`: 15, `learning_rate`: 0.001 | Efficient Neural Matrix Factorization. Focuses on efficient training without negative sampling. |
 | **CFKG** | `epochs`: 20, `learning_rate`: 0.001, `embedding_size`: 64, `loss_type`: "BPR" | Collaborative Filtering over Knowledge Graphs. Fuses CF with KG embeddings optimization. |
@@ -178,4 +153,4 @@ These scripts load the pre-trained models, extract the recommended candidates, a
     - `TARGET_CKPTS`: Instructs the script on which specific model weights to load. Look inside the generated `saved/` directory. **Example**: If training generated `saved/LightGCN-Aug-10-2023.pth`, you should set `TARGET_CKPTS = {'LightGCN-Aug-10-2023.pth'}`. If you leave it as an empty set `set()`, the script will automatically iterate over *all* `.pth` files inside `saved/`.
     - `TOPKS`: The target cutoff lengths for the absolute final rearranged lists (e.g., `[10]`).
     - `CANDIDATE_KS`: The sizes of the initial candidate pool generated by the baseline to be passed into the re-ranker window (e.g., extracting 50 base-items `[50]` to find the 10 most unexpected).
-    - **Configuration Weights**: The most important variables for the re-ranking formula. You can shift the framework's behavior by altering `WEIGHT_RELEVANCE`, `WEIGHT_NOVELTY`, and `WEIGHT_UNEXPECTEDNESS` (e.g., `0.33` each for a perfectly balanced approach, or tweaking them to selectively maximize Serendipity).
+    - **Configuration Weights**: The most important variables for the re-ranking formula. You can shift the framework's behavior by altering `WEIGHT_RELEVANCE`, `WEIGHT_NOVELTY`, and `WEIGHT_UNEXPECTEDNESS` (e.g., `0.33` each for a perfectly balanced approach, or tweaking them to selectively maximize creativity).

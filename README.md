@@ -1,15 +1,3 @@
-# 🎨 A Model-Agnostic Re-ranking Framework for Creativity-Oriented Recommendations
-
-[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![RecBole](https://img.shields.io/badge/RecBole-Framework-brightgreen.svg)](https://github.com/RUCAIBox/RecBole)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
----
-
-## 📚 Overview
-Modern recommender systems are effective at optimizing accuracy, but this can sometimes lead to obvious recommendations and limit opportunities for user exploration. To tackle this issue, it is common to design recommendation strategies that prioritize beyond-accuracy metrics, such as novelty and diversity, to provide users with more surprising suggestions. In this paper, we propose a model-agnostic, lightweight re-ranking approach grounded on computational creativity theories that aim to provide users with recommendations that combine relevance, novelty, and unexpectedness. The method is applied after the recommendation step and can be integrated with existing models without modifying their training process. We evaluate our approach on benchmark datasets and recommendation algorithms, using the RecBole framework. Overall, our findings suggest our creativity-aware re-ranking can improve the quality of the recommendations in terms of trade-off between accuracy and beyond-accuracy metrics
-
 ## 🚀 Installation & Setup
 
 > ⚠️ **Important**: Python 3.8+ and a CUDA-capable GPU are required for optimal performance.
